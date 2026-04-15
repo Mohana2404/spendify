@@ -17,10 +17,13 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
+from expenses.views import ExpensesList, ExpensesList
 from splits.views import SplitList
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/splits/", SplitList.as_view(), name="split-list"),
+    path("api/expenses/", ExpensesList.as_view(), name="expense-list"),
+
     
 ]
