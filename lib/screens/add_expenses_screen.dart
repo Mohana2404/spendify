@@ -84,13 +84,12 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final greenPrimary = Colors.green.shade700;
-    final greenBorder = Colors.green.shade300;
+    
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Expense'),
-        backgroundColor: greenPrimary,
+        backgroundColor:Color.fromARGB(255, 59, 32, 63),
         foregroundColor: Colors.white,
       ),
       body: Form(
@@ -111,15 +110,15 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
                 },
                 decoration: InputDecoration(
                   labelText: 'Expense Title',
-                  labelStyle: TextStyle(color: greenPrimary),
+                  labelStyle: TextStyle(color: Color.fromARGB(255, 59, 32, 63)),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: greenBorder),
+                    borderSide: BorderSide(color: Color.fromARGB(255, 102, 38, 111)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: greenPrimary, width: 2),
+                    borderSide: BorderSide(color: Color.fromARGB(255, 102, 38, 111) , width: 2),
                   ),
                   border: OutlineInputBorder(
-                    borderSide: BorderSide(color: greenBorder),
+                    borderSide: BorderSide(color: Color.fromARGB(255, 102, 38, 111)),
                   ),
                 ),
               ),
@@ -137,15 +136,15 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
                 decoration: InputDecoration(
                   labelText: 'Amount',
                   prefixText: 'Rs. ',
-                  labelStyle: TextStyle(color: greenPrimary),
+                  labelStyle: TextStyle(color: Color.fromARGB(255, 59, 32, 63)),
                   enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: greenBorder),
+                    borderSide: BorderSide(color: Color.fromARGB(255, 102, 38, 111)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: greenPrimary, width: 2),
+                    borderSide: BorderSide(color: Color.fromARGB(255, 102, 38, 111), width: 2),
                   ),
                   border: OutlineInputBorder(
-                    borderSide: BorderSide(color: greenBorder),
+                    borderSide: BorderSide(color: Color.fromARGB(255, 102, 38, 111)),
                   ),
                 ),
               ),
@@ -153,15 +152,15 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: greenBorder),
+                  border: Border.all(color: Color.fromARGB(255, 102, 38, 111)),
                 ),
                 child: Text(
                   _selectedDate == null
                       ? 'No date chosen'
                       : 'Picked date: ${_selectedDate!.day}-${_selectedDate!.month}-${_selectedDate!.year}',
-                  style: TextStyle(color: Colors.green.shade900),
+                  style: TextStyle(color: Color.fromARGB(255, 59, 32, 63)),
                 ),
               ),
               const SizedBox(height: 8),
@@ -169,10 +168,10 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
                 alignment: Alignment.center,
                 child: TextButton.icon(
                   onPressed: datePicker,
-                  icon: Icon(Icons.calendar_month, color: greenPrimary),
+                  icon: Icon(Icons.calendar_month, color: Color.fromARGB(255, 59, 32, 63)),
                   label: Text(
                     'Select Date',
-                    style: TextStyle(color: greenPrimary),
+                    style: TextStyle(color: Color.fromARGB(255, 59, 32, 63)),
                   ),
                 ),
               ),
@@ -180,7 +179,7 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
               ElevatedButton(
                 onPressed: submitForm,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: greenPrimary,
+                  backgroundColor: Color.fromARGB(255, 59, 32, 63),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),

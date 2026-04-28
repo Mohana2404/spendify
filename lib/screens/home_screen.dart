@@ -1,42 +1,44 @@
 import "package:flutter/material.dart";
+import "package:http/http.dart";
+import 'dart:convert';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-    @override
-    Widget build(BuildContext context) {
-      return Scaffold(
-        appBar: AppBar(title: const Text("Spendify")),
-        body: 
-        Column ( 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Spendify")),
+      body: const 
+         Column(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            ExpenseCard(title: "Groceries", date: "26-dec", amount: "-500.00 ₹"),
-            ExpenseCard(title: "Electricity Bill", date: "27-dec", amount: "-1200.00 ₹"),
-            ExpenseCard(title: "Dinner Out", date: "28-dec", amount: "-800.00 ₹"),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              
-              children: [
-                FloatingActionButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, "/add-expense");
-                  },
-                  child: const Icon(Icons.add),
-                ),
-              ],
-            )
+            CategoryCard()
           ],
-        )
+        ),
         
-      );
-    }
+        
+      
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, "/add-expense");
+        },
+        child: const Icon(Icons.add),
+        
+      ),
+       
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      
+    );
+    
+  }
 }
 
-class ExpenseCard extends StatelessWidget {
-  const ExpenseCard({super.key, required this.title, required this.date, required this.amount});
-  final String title;
-  final String date;
-  final String amount;
+            
+
+class CategoryCard extends StatelessWidget {
+  const CategoryCard({super.key});
+  
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -51,16 +53,20 @@ class ExpenseCard extends StatelessWidget {
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(title),
-                Text(date),
+                Text("Food"),
+                Text(totalExpenses.toStringAsFixed(2)),
+
+
                 
               ],
             ),
             Container(
               child: Text(
-                amount.toString()),
+                "Food",
+                style: TextStyle(fontSize: 16),
+              ),
               decoration: BoxDecoration(
-                color: Colors.red[100],
+                
                 borderRadius: BorderRadius.circular(5),
                 
               ),
@@ -74,4 +80,23 @@ class ExpenseCard extends StatelessWidget {
       
  }
 }
+
+Future<String> _fetchExpenses() async {
+  final url = Uri.parse('https://127.0.0.1:8000/expenses');
+  final response = await get(url);
+  response.statusCode == 200
+      ? print('Expenses fetched successfully: ${response.body}')
+      : print('Failed to fetch expenses. Status code: ${response.statusCode}');
+      
+  return response.body;
+
+
+}
+
+var expensesData = _fetchExpenses();
+var totalExpenses = 0.0;
+void calculateTotalExpenses(String expensesJson) {
+  totalExpenses = (jsonDecode(expensesJson) as List).fold(0.0, (sum, expense) => sum + expense['amount']);  
+}
+
 
