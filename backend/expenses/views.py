@@ -6,14 +6,15 @@ from rest_framework.response import Response
 class ExpensesList(APIView):
     def get(self, request):
         expenses = Expenses.objects.all()
-        data = [{"name": e.name, "description": e.description, "amount": e.amount, "category": e.category} for e in expenses]
+        data = [{"id": e.id, "name": e.name, "description": e.description, "amount": e.amount, "category": e.category} for e in expenses]
         return Response(data)
     def post(self, request):
+        id = request.data.get("id")
         name = request.data.get("name")
         description = request.data.get("description")
         amount = request.data.get("amount")
         category = request.data.get("category")
-        new_expense = Expenses.objects.create(name=name, description=description, amount=amount, category=category)
+        new_expense = Expenses.objects.create(id=id, name=name, description=description, amount=amount, category=category)
         new_expense.save()
         return Response({"message": "Expense created", "id": new_expense.id})
     def delete(self, request, expense_id):
