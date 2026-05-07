@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+const Color _primaryColor = Color.fromARGB(255, 59, 32, 63);
+const Color _accentColor = Color.fromARGB(255, 102, 38, 111);
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -44,8 +47,13 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Spendify'),
+          backgroundColor: _primaryColor,
+          foregroundColor: Colors.white,
           bottom: TabBar(
             isScrollable: true,
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
             onTap: (index) {
               setState(() {
                 _selectedCategory = _tabs[index];
@@ -62,7 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             if (snapshot.hasError) {
-              print(  'snapshot error: ${snapshot.error}');
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -104,6 +111,8 @@ class _HomeScreenState extends State<HomeScreen> {
           onPressed: () {
             Navigator.pushNamed(context, '/add-expense');
           },
+          backgroundColor: _primaryColor,
+          foregroundColor: Colors.white,
           child: const Icon(Icons.add),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -119,21 +128,17 @@ class ExpenseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _categoryColor(expense.category);
+    final categoryColor = _categoryColor(expense.category);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [color.withValues(alpha: 0.15), Colors.white],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        border: Border.all(color: _accentColor.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.10),
+            color: _primaryColor.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -148,10 +153,11 @@ class ExpenseCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.18),
+                color: categoryColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: categoryColor.withValues(alpha: 0.18)),
               ),
-              child: Icon(_categoryIcon(expense.category), color: color),
+              child: Icon(_categoryIcon(expense.category), color: categoryColor),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -191,13 +197,14 @@ class ExpenseCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: color,
+                color: _accentColor.withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _accentColor.withValues(alpha: 0.16)),
               ),
               child: Text(
                 '\$${expense.amount.toStringAsFixed(2)}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: _primaryColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -219,18 +226,36 @@ class _Tag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.grey.shade200,
+        color: const Color.fromARGB(255, 244, 240, 246),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color.fromARGB(255, 102, 38, 111).withValues(alpha: 0.10),
+        ),
       ),
       child: Text(
         label,
         style: TextStyle(
-          color: Colors.grey.shade800,
+          color: Colors.grey.shade700,
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
       ),
     );
+  }
+}
+
+Color _categoryColor(String category) {
+  switch (category.toLowerCase()) {
+    case 'food':
+      return const Color.fromARGB(255, 102, 38, 111);
+    case 'travel':
+      return const Color.fromARGB(255, 84, 77, 130);
+    case 'shopping':
+      return const Color.fromARGB(255, 121, 86, 141);
+    case 'bills':
+      return const Color.fromARGB(255, 92, 58, 99);
+    default:
+      return const Color.fromARGB(255, 59, 32, 63);
   }
 }
 
@@ -262,7 +287,7 @@ class Expense {
 
 Future<List<Expense>> fetchExpenses() async {
   final response = await http.get(
-    Uri.parse('http://10.0.2.2:8000/api/expenses'),
+    Uri.parse('http://127.0.0.1:8000/api/expenses/'),
     headers: {'Accept': 'application/json'},
   );
 
@@ -281,20 +306,7 @@ Future<List<Expense>> fetchExpenses() async {
       .toList();
 }
 
-Color _categoryColor(String category) {
-  switch (category.toLowerCase()) {
-    case 'food':
-      return Colors.orange;
-    case 'travel':
-      return Colors.blue;
-    case 'shopping':
-      return Colors.pink;
-    case 'bills':
-      return Colors.indigo;
-    default:
-      return Colors.teal;
-  }
-}
+
 
 IconData _categoryIcon(String category) {
   switch (category.toLowerCase()) {
