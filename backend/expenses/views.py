@@ -35,4 +35,4 @@ class ExpensesList(APIView):
             return Response({"message": "Expense updated"})
         except Expenses.DoesNotExist:
             return Response({"error": "Expense not found"}, status=404)
-# Create your views here.
+

@@ -108,8 +108,14 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/add-expense');
+          onPressed: () async {
+            final addedExpense = await Navigator.pushNamed(
+              context,
+              '/add-expense',
+            );
+            if (addedExpense == true) {
+              await _refresh();
+            }
           },
           backgroundColor: _primaryColor,
           foregroundColor: Colors.white,
@@ -155,9 +161,14 @@ class ExpenseCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: categoryColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: categoryColor.withValues(alpha: 0.18)),
+                border: Border.all(
+                  color: categoryColor.withValues(alpha: 0.18),
+                ),
               ),
-              child: Icon(_categoryIcon(expense.category), color: categoryColor),
+              child: Icon(
+                _categoryIcon(expense.category),
+                color: categoryColor,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -229,7 +240,12 @@ class _Tag extends StatelessWidget {
         color: const Color.fromARGB(255, 244, 240, 246),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: const Color.fromARGB(255, 102, 38, 111).withValues(alpha: 0.10),
+          color: const Color.fromARGB(
+            255,
+            102,
+            38,
+            111,
+          ).withValues(alpha: 0.10),
         ),
       ),
       child: Text(
@@ -305,8 +321,6 @@ Future<List<Expense>> fetchExpenses() async {
       .map(Expense.fromJson)
       .toList();
 }
-
-
 
 IconData _categoryIcon(String category) {
   switch (category.toLowerCase()) {
