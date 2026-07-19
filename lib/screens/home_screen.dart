@@ -1,7 +1,7 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'groups_tab.dart';
 
 const Color _primaryColor = Color.fromARGB(255, 59, 32, 63);
 const Color _accentColor = Color.fromARGB(255, 102, 38, 111);
@@ -14,7 +14,50 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const List<String> _tabs = [
+  int _currentIndex = 0;
+
+  final List<Widget> _tabs = [
+    const ExpensesTab(),
+    const GroupsTab(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _tabs[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        selectedItemColor: _primaryColor,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_balance_wallet),
+            label: 'Personal',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.groups),
+            label: 'Groups',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ExpensesTab extends StatefulWidget {
+  const ExpensesTab({super.key});
+
+  @override
+  State<ExpensesTab> createState() => _ExpensesTabState();
+}
+
+class _ExpensesTabState extends State<ExpensesTab> {
+  static const List<String> _categories = [
     'All',
     'Food',
     'Travel',
@@ -43,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: _tabs.length,
+      length: _categories.length,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Spendify'),
@@ -56,10 +99,10 @@ class _HomeScreenState extends State<HomeScreen> {
             unselectedLabelColor: Colors.white70,
             onTap: (index) {
               setState(() {
-                _selectedCategory = _tabs[index];
+                _selectedCategory = _categories[index];
               });
             },
-            tabs: _tabs.map((tab) => Tab(text: tab)).toList(),
+            tabs: _categories.map((tab) => Tab(text: tab)).toList(),
           ),
         ),
         body: FutureBuilder<List<Expense>>(
@@ -101,7 +144,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
                 itemCount: filteredExpenses.length,
                 itemBuilder: (context, index) {
-                  return ExpenseCard(expense: filteredExpenses[index]);
+                  return ExpenseCard(
+                    expense: filteredExpenses[index],
+                    onRefresh: _refresh,
+                  );
                 },
               ),
             );
@@ -121,16 +167,20 @@ class _HomeScreenState extends State<HomeScreen> {
           foregroundColor: Colors.white,
           child: const Icon(Icons.add),
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
   }
 }
 
 class ExpenseCard extends StatelessWidget {
-  const ExpenseCard({super.key, required this.expense});
+  const ExpenseCard({
+    super.key,
+    required this.expense,
+    required this.onRefresh,
+  });
 
   final Expense expense;
+  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -198,7 +248,6 @@ class ExpenseCard extends StatelessWidget {
                     spacing: 8,
                     children: [
                       _Tag(label: expense.category),
-                      _Tag(label: 'ID ${expense.id}'),
                     ],
                   ),
                 ],
@@ -219,6 +268,47 @@ class ExpenseCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
+            ),
+            // edit and delete
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () async {
+                // edit the expense
+                final result = await Navigator.pushNamed(
+                  context,
+                  '/add-expense',
+                  arguments: expense,
+                );
+                if (result == true) {
+                  onRefresh();
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () async {
+                // delete the expense
+                try {
+                  final response = await http.delete(
+                    Uri.parse('http://127.0.0.1:8000/api/expenses/${expense.id}/'),
+                  );
+                  if (response.statusCode == 204 || response.statusCode == 200) {
+                    onRefresh();
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Failed to delete expense.')),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error deleting expense: $e')),
+                    );
+                  }
+                }
+              },
             ),
           ],
         ),

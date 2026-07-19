@@ -1,29 +1,13 @@
-"""
-URL configuration for expences project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-
 from django.contrib import admin
 from django.urls import include, path
 from expenses.views import ExpensesList, ExpensesList
-from splits.views import SplitList
+from splits.views import GroupListCreate, GroupDetail, GroupExpenseListCreate
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/splits/", SplitList.as_view(), name="split-list"),
+    path("api/groups/", GroupListCreate.as_view(), name="group-list"),
+    path("api/groups/<int:group_id>/", GroupDetail.as_view(), name="group-detail"),
+    path("api/groups/<int:group_id>/expenses/", GroupExpenseListCreate.as_view(), name="group-expense-list"),
     path("api/expenses/", ExpensesList.as_view(), name="expense-list"),
-
-    
+    path("api/expenses/<int:expense_id>/", ExpensesList.as_view(), name="expense-detail"),
 ]

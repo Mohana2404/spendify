@@ -1,35 +1,45 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import split
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from .models import Group, GroupMember, GroupExpense
+from .serializers import GroupSerializer, GroupMemberSerializer, GroupExpenseSerializer
 
-class SplitList(APIView):
+class GroupListCreate(APIView):
     def get(self, request):
-        splits = split.objects.all()
-        data = [{"name": s.name, "description": s.description, "amount": s.amount, "share": s.share} for s in splits]
-        return Response(data)
+        groups = Group.objects.all()
+        serializer = GroupSerializer(groups, many=True)
+        return Response(serializer.data)
+
     def post(self, request):
-        name = request.data.get("name")
-        description = request.data.get("description")
-        amount = request.data.get("amount")
-        share = request.data.get("share")
-        new_split = split.objects.create(name=name, description=description, amount=amount, share=share)
-        new_split.save()    
-        return Response({"message": "Split created", "id": new_split.id})
-    def delete(self, request, split_id):
-        try:
-            s = split.objects.get(id=split_id)
-            s.delete()
-            return Response({"message": "Split deleted"})
-        except split.DoesNotExist:
-            return Response({"error": "Split not found"}, status=404)
-    def put(self, request, split_id):
-        try:
-            s = split.objects.get(id=split_id)
-            s.name = request.data.get("name", s.name)
-            s.description = request.data.get("description", s.description)
-            s.amount = request.data.get("amount", s.amount)
-            s.share = request.data.get("share", s.share)
-            s.save()
-            return Response({"message": "Split updated"})
-        except split.DoesNotExist:
-            return Response({"error": "Split not found"}, status=404)
+        serializer = GroupSerializer(data=request.data)
+        if serializer.is_valid():
+            group = serializer.save()
+            members_data = request.data.get('members', [])
+            for member_name in members_data:
+                GroupMember.objects.create(group=group, name=member_name)
+            
+            group.refresh_from_db()
+            return Response(GroupSerializer(group).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GroupDetail(APIView):
+    def get(self, request, group_id):
+        group = get_object_or_404(Group, id=group_id)
+        serializer = GroupSerializer(group)
+        return Response(serializer.data)
+
+class GroupExpenseListCreate(APIView):
+    def get(self, request, group_id):
+        group = get_object_or_404(Group, id=group_id)
+        expenses = GroupExpense.objects.filter(group=group)
+        serializer = GroupExpenseSerializer(expenses, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, group_id):
+        group = get_object_or_404(Group, id=group_id)
+        serializer = GroupExpenseSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(group=group)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

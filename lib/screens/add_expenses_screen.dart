@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'home_screen.dart';
 
 class AddExpensesScreen extends StatefulWidget {
   const AddExpensesScreen({super.key});
@@ -15,6 +16,21 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
   final _descriptionController = TextEditingController();
   DateTime? _selectedDate;
   final _formKey = GlobalKey<FormState>();
+  Expense? _existingExpense;
+
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Expense && _existingExpense == null) {
+      _existingExpense = args;
+      _titleController.text = args.name;
+      _amountController.text = args.amount.toString();
+      _descriptionController.text = args.description;
+      _selectedDate = DateTime.now(); // Dummy date for validation
+    }
+  }
 
   @override
   void dispose() {
@@ -55,18 +71,22 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
   }
 
   Future<void> submitExpense() async {
-    final url = Uri.parse('http://127.0.0.1:8000/api/expenses/');
+    final isEdit = _existingExpense != null;
+    final url = isEdit 
+        ? Uri.parse('http://127.0.0.1:8000/api/expenses/${_existingExpense!.id}/')
+        : Uri.parse('http://127.0.0.1:8000/api/expenses/');
+
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'name': _titleController.text.trim(),
-          'description': _descriptionController.text.trim(),
-          'amount': double.parse(_amountController.text.trim()),
-          'category': 'Other',
-        }),
-      );
+      final bodyData = jsonEncode({
+        'name': _titleController.text.trim(),
+        'description': _descriptionController.text.trim(),
+        'amount': double.parse(_amountController.text.trim()),
+        'category': isEdit ? _existingExpense!.category : 'Other',
+      });
+
+      final response = isEdit 
+          ? await http.put(url, headers: {'Content-Type': 'application/json'}, body: bodyData)
+          : await http.post(url, headers: {'Content-Type': 'application/json'}, body: bodyData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (!mounted) {
@@ -74,7 +94,7 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Expense added successfully!')),
+          SnackBar(content: Text(isEdit ? 'Expense updated successfully!' : 'Expense added successfully!')),
         );
         Navigator.pop(context, true);
       } else {
@@ -103,8 +123,8 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Expense'),
-        backgroundColor: Color.fromARGB(255, 59, 32, 63),
+        title: Text(_existingExpense == null ? 'Add Expense' : 'Edit Expense'),
+        backgroundColor: const Color.fromARGB(255, 59, 32, 63),
         foregroundColor: Colors.white,
       ),
       body: Form(
@@ -245,7 +265,7 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
-                child: const Text('Add Expense'),
+                child: Text(_existingExpense == null ? 'Add Expense' : 'Save Changes'),
               ),
             ],
           ),
