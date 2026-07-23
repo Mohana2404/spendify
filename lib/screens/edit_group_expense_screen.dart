@@ -2,23 +2,25 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'groups_tab.dart'; // For Group and GroupMember
+import 'group_details_screen.dart'; // For GroupExpense
 
 const Color _primaryColor = Color.fromARGB(255, 59, 32, 63);
 
-class AddGroupExpenseScreen extends StatefulWidget {
+class EditGroupExpenseScreen extends StatefulWidget {
   final Group group;
+  final GroupExpense expense;
 
-  const AddGroupExpenseScreen({super.key, required this.group});
+  const EditGroupExpenseScreen({super.key, required this.group, required this.expense});
 
   @override
-  State<AddGroupExpenseScreen> createState() => _AddGroupExpenseScreenState();
+  State<EditGroupExpenseScreen> createState() => _EditGroupExpenseScreenState();
 }
 
-class _AddGroupExpenseScreenState extends State<AddGroupExpenseScreen> {
+class _EditGroupExpenseScreenState extends State<EditGroupExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _amountController = TextEditingController();
-  final _categoryController = TextEditingController(text: 'General');
+  late final TextEditingController _nameController;
+  late final TextEditingController _amountController;
+  late final TextEditingController _categoryController;
   
   int? _selectedPayerId;
   bool _isSaving = false;
@@ -26,9 +28,10 @@ class _AddGroupExpenseScreenState extends State<AddGroupExpenseScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.group.members.isNotEmpty) {
-      _selectedPayerId = widget.group.members.first.id;
-    }
+    _nameController = TextEditingController(text: widget.expense.name);
+    _amountController = TextEditingController(text: widget.expense.amount.toString());
+    _categoryController = TextEditingController(text: widget.expense.category);
+    _selectedPayerId = widget.expense.paidBy;
   }
 
   @override
@@ -48,8 +51,8 @@ class _AddGroupExpenseScreenState extends State<AddGroupExpenseScreen> {
     });
 
     try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/groups/${widget.group.id}/expenses/'),
+      final response = await http.put(
+        Uri.parse('http://127.0.0.1:8000/api/groups/${widget.group.id}/expenses/${widget.expense.id}/'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': _nameController.text.trim(),
@@ -59,7 +62,7 @@ class _AddGroupExpenseScreenState extends State<AddGroupExpenseScreen> {
         }),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         if (context.mounted) {
           Navigator.pop(context, true);
         }
@@ -87,7 +90,7 @@ class _AddGroupExpenseScreenState extends State<AddGroupExpenseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Group Expense'),
+        title: const Text('Edit Group Expense'),
         backgroundColor: _primaryColor,
         foregroundColor: Colors.white,
       ),
@@ -158,7 +161,7 @@ class _AddGroupExpenseScreenState extends State<AddGroupExpenseScreen> {
                 ),
                 child: _isSaving
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Save Expense', style: TextStyle(fontSize: 16)),
+                    : const Text('Update Expense', style: TextStyle(fontSize: 16)),
               ),
             ),
           ],

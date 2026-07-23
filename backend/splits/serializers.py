@@ -10,7 +10,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
 class GroupExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupExpense
-        fields = ['id', 'group', 'name', 'description', 'amount', 'created_at', 'paid_by']
+        fields = ['id', 'group', 'name', 'description', 'amount', 'category', 'created_at', 'paid_by']
         read_only_fields = ['group', 'created_at']
 
 class GroupSerializer(serializers.ModelSerializer):

@@ -28,7 +28,7 @@ class _AddExpensesScreenState extends State<AddExpensesScreen> {
       _titleController.text = args.name;
       _amountController.text = args.amount.toString();
       _descriptionController.text = args.description;
-      _selectedDate = DateTime.now(); // Dummy date for validation
+      _selectedDate = DateTime.now();
     }
   }
 

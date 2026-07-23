@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'groups_tab.dart'; // For Group and GroupMember models
 import 'add_group_expense_screen.dart';
+import 'edit_group_expense_screen.dart';
 
 const Color _primaryColor = Color.fromARGB(255, 59, 32, 63);
 const Color _accentColor = Color.fromARGB(255, 102, 38, 111);
@@ -37,6 +38,38 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   Widget build(BuildContext context) {
     final group = widget.group as Group;
 
+    Future<void> _editExpense(GroupExpense expense) async {
+      final updated = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EditGroupExpenseScreen(
+            group: group,
+            expense: expense,
+          ),
+        ),
+      );
+      if (updated == true) {
+        _refresh();
+      }
+    }
+
+Future<void> _deleteExpense(int expenseId) async {
+  final response = await http.delete(
+    Uri.parse('http://127.0.0.1:8000/api/groups/${group.id}/expenses/$expenseId/'),
+  );
+
+  if (response.statusCode == 204) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Expense deleted successfully')),
+    );
+    await _refresh();
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Failed to delete expense')),
+    );
+  }
+}
+
     return Scaffold(
       appBar: AppBar(
         title: Text(group.name),
@@ -55,6 +88,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           }
 
           final expenses = snapshot.data ?? [];
+          expenses.sort((a, b) => a.category.compareTo(b.category));
           
           // Calculate balances
           final Map<int, double> balances = {};
@@ -108,19 +142,37 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                         child: Icon(Icons.receipt, color: Colors.white),
                       ),
                       title: Text(e.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text('Paid by ${payer.name}'),
-                      trailing: Text(
-                        '\$${e.amount.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          color: _primaryColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      subtitle: Text('Paid by ${payer.name} • ${e.category}'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '\$${e.amount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: _primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () {
+                              _editExpense(e);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              _deleteExpense(e.id);
+                            },
+                          ),
+                        ],
                       ),
-                    ),
+                    )
                   );
                 }),
               ],
+              
             ),
           );
         },
@@ -206,12 +258,14 @@ class GroupExpense {
   final String name;
   final double amount;
   final int paidBy;
+  final String category;
 
   GroupExpense({
     required this.id,
     required this.name,
     required this.amount,
     required this.paidBy,
+    required this.category,
   });
 
   factory GroupExpense.fromJson(Map<String, dynamic> json) {
@@ -220,6 +274,7 @@ class GroupExpense {
       name: json['name'] as String,
       amount: double.parse(json['amount'].toString()),
       paidBy: json['paid_by'] as int,
+      category: json['category'] as String? ?? 'General',
     );
   }
 }
